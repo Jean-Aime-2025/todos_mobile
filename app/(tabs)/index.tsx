@@ -1,28 +1,223 @@
-import { UrbanistBold } from '@/components/StyledText';
-import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  UrbanistBold,
+  UrbanistLight,
+  UrbanistRegular,
+  UrbanistSemiBold,
+} from '@/components/StyledText';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
+import Entypo from '@expo/vector-icons/Entypo';
+import { router } from 'expo-router';
+import { useState, useEffect } from 'react';
+import TodoComponent from '@/components/common/TodoComponent';
+
+const BgIconColors = [
+  { bg: '#DBECF6', icon: '#194A66' },
+  { bg: '#403100', icon: '#FEF5D3' },
+  { bg: '#4A3780', icon: '#E7E2F3' },
+];
+
+const initialTodos: Todo[] = [
+  {
+    id: 1,
+    title: 'Complete project presentation',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 2,
+    title: 'Buy groceries',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 3,
+    title: 'Call mom',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 4,
+    title: 'Go for a run',
+    completed: true,
+    createdAt: new Date(),
+  },
+  {
+    id: 5,
+    title: 'Read 30 pages of book',
+    completed: false,
+    createdAt: new Date(),
+  },
+  // ... rest of your initial todos
+];
 
 export default function Home() {
   const screenHeight = Dimensions.get('window').height;
-  const headerHeight = screenHeight * 0.20;
+  const headerHeight = screenHeight * 0.25;
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [currentDate, setCurrentDate] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>(
+    'all'
+  );
+
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDate(
+        now.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        })
+      );
+      setCurrentTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+      );
+    };
+
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const toggleTodo = (id: number) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
+
+  const filteredTodos = () => {
+    switch (activeTab) {
+      case 'active':
+        return todos.filter((todo) => !todo.completed);
+      case 'completed':
+        return todos.filter((todo) => todo.completed);
+      default:
+        return todos;
+    }
+  };
+
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const editTodo = (id: number, newTitle: string) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, title: newTitle } : todo
+    ));
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#4A3780]"> 
+    <SafeAreaView className="flex-1 bg-[#4A3780]">
       <View style={[styles.header, { height: headerHeight }]}>
-        <UrbanistBold className="text-white text-5xl">Home</UrbanistBold>
+        <View className="w-full flex flex-row items-center justify-between">
+          <View className="flex flex-col">
+            <UrbanistBold className="text-xl text-white">
+              {currentDate || 'Today'}
+            </UrbanistBold>
+            <UrbanistLight className="text-sm text-white">
+              {filteredTodos().length} tasks
+            </UrbanistLight>
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/add')}
+            className="bg-white p-4 py-3 rounded-xl flex flex-row gap-1 items-center"
+          >
+            <Entypo name="plus" size={20} color="#4A3780" />
+            <UrbanistRegular className="text-primary text-sm">
+              Add Task
+            </UrbanistRegular>
+          </TouchableOpacity>
+        </View>
+
+        <View className="w-full bg-white/20 rounded-full px-4 py-1 flex-row items-center">
+          <Feather name="search" size={24} color="white" />
+          <TextInput
+            placeholder="Search tasks..."
+            placeholderTextColor="rgba(255, 255, 255, 0.7)"
+            className="flex-1 ml-3 text-white"
+            style={{ fontFamily: 'Urbanist-Regular' }}
+          />
+        </View>
       </View>
-      
-      <View style={styles.scrollContainer}> 
+
+      <View style={styles.scrollContainer}>
+        {/* Tabs */}
+        <View className="flex flex-row justify-around mt-4 mb-2">
+          <TouchableOpacity
+            onPress={() => setActiveTab('all')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'all' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={activeTab === 'all' ? 'text-white' : 'text-gray-600'}
+            >
+              All
+            </UrbanistRegular>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('active')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'active' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={
+                activeTab === 'active' ? 'text-white' : 'text-gray-600'
+              }
+            >
+              Active
+            </UrbanistRegular>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('completed')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'completed' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={
+                activeTab === 'completed' ? 'text-white' : 'text-gray-600'
+              }
+            >
+              Completed
+            </UrbanistRegular>
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
         >
-          <View style={styles.content}>
-            <UrbanistBold className="text-black text-xl">
-              Scrollable Content
-            </UrbanistBold>
-            <View style={{height: 1000}}></View>
-          </View>
+          {filteredTodos().map((todo, index) => (
+        <TodoComponent
+          key={todo.id}
+          todo={todo}
+          onToggle={toggleTodo}
+          onDelete={deleteTodo}
+          onEdit={editTodo}
+          bgColor={BgIconColors[index % 3].bg}
+          iconColor={BgIconColors[index % 3].icon}
+        />
+      ))}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -32,22 +227,27 @@ export default function Home() {
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#4A3780',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    flexDirection: 'column',
+    gap: 16,
+    padding: 16,
+    paddingVertical: 20,
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 40, 
+    backgroundColor: '#F1F5F9',
+    borderTopLeftRadius: 40,
     overflow: 'hidden',
   },
   scrollView: {
     flex: 1,
+    paddingVertical:12
   },
   scrollContent: {
-    padding: 16,
-  },
-  content: {
-    flex: 1,
+    padding: 13,
+    paddingTop: 0,
+    paddingBottom: 40,
+    flexGrow: 1,
   },
 });
