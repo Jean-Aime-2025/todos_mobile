@@ -54,13 +54,13 @@ const TodoComponent = ({
   };
 
   return (
-    <View className="bg-white rounded-xl mb-3 p-4">
+    <View className="bg-white rounded-2xl mb-3 p-4">
       <View className="flex flex-row items-center justify-between w-full">
         <View className="flex flex-row items-center gap-3 flex-1">
-          <View style={{ backgroundColor: bgColor }} className="p-2 rounded-lg">
+          <View style={{ backgroundColor: bgColor }} className="p-2 rounded-full">
             <MaterialIcons
               name="sticky-note-2"
-              size={24}
+              size={20}
               color={iconColor}
             />
           </View>
@@ -93,10 +93,10 @@ const TodoComponent = ({
           {!isEditing && (
             <>
               <TouchableOpacity onPress={() => setIsEditing(true)}>
-                <Feather name="edit" size={20} color="#4A3780" />
+                <Feather name="edit" size={16} color="#4A3780" />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
-                <Entypo name="trash" size={20} color="#FF3B30" />
+                <Entypo name="trash" size={16} color="#FF3B30" />
               </TouchableOpacity>
             </>
           )}
@@ -104,6 +104,7 @@ const TodoComponent = ({
             value={todo.completed}
             onValueChange={() => onToggle(todo.id)}
             color={todo.completed ? '#4A3780' : undefined}
+            className='h-5 w-5'
           />
         </View>
       </View>
