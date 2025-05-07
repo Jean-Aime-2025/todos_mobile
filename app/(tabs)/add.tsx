@@ -2,14 +2,14 @@ import { UrbanistBold } from '@/components/StyledText';
 import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Home() {
+export default function Todos() {
   const screenHeight = Dimensions.get('window').height;
-  const headerHeight = screenHeight * 0.20;
+  const headerHeight = screenHeight * 0.15;
 
   return (
     <SafeAreaView className="flex-1 bg-[#4A3780]"> 
       <View style={[styles.header, { height: headerHeight }]}>
-        <UrbanistBold className="text-white text-5xl">Home</UrbanistBold>
+        <UrbanistBold className="text-white text-5xl">Add</UrbanistBold>
       </View>
       
       <View style={styles.scrollContainer}> 
@@ -38,8 +38,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 40, 
-    overflow: 'hidden',
+    overflow: 'hidden', 
   },
   scrollView: {
     flex: 1,
