@@ -23,7 +23,7 @@ export default function Todos() {
         >
           <Entypo name="chevron-thin-left" size={20} color="#4A3780" />
         </TouchableOpacity>
-        <UrbanistBold className="text-white text-2xl">
+        <UrbanistBold style={{ color: 'white', fontSize: 24 }}>
           Add New Task
         </UrbanistBold>
       </View>
@@ -39,7 +39,7 @@ export default function Todos() {
           </View>
         </View>
         <TouchableOpacity className="w-full bg-primary py-3 rounded-full flex items-center justify-center">
-          <UrbanistSemiBold className='text-white'>Save</UrbanistSemiBold>
+          <UrbanistSemiBold style={{ color: 'white' }}>Save</UrbanistSemiBold>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 20,
     flexDirection: 'column',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
   },
   content: {
     flex: 1,

@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   UrbanistBold,
   UrbanistLight,
   UrbanistRegular,
-  UrbanistSemiBold,
 } from '@/components/StyledText';
 import {
   View,
@@ -57,7 +55,6 @@ const initialTodos: Todo[] = [
     completed: false,
     createdAt: new Date(),
   },
-  // ... rest of your initial todos
 ];
 
 export default function Home() {
@@ -65,6 +62,7 @@ export default function Home() {
   const headerHeight = screenHeight * 0.25;
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [currentDate, setCurrentDate] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTime, setCurrentTime] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>(
     'all'
@@ -159,7 +157,6 @@ export default function Home() {
       </View>
 
       <View style={styles.scrollContainer}>
-        {/* Tabs */}
         <View className="flex flex-row justify-around mt-4 mb-2">
           <TouchableOpacity
             onPress={() => setActiveTab('all')}
