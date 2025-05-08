@@ -1,107 +1,126 @@
-import { useCallback, useState } from "react";
-import { View, FlatList, Alert, TextInput } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { router } from "expo-router";
+import {
+  UrbanistBold,
+  UrbanistLight,
+  UrbanistRegular,
+} from '@/components/StyledText';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Feather from '@expo/vector-icons/Feather';
+import Entypo from '@expo/vector-icons/Entypo';
+import { router } from 'expo-router';
+import { useState, useEffect } from 'react';
+import TodoComponent from '@/components/common/TodoComponent';
 
-import { fetchTodos, createTodo, deleteTodo, updateTodo } from "../../services/api";
-// import TodoItem from "../components/TodoItem";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { UrbanistRegular, UrbanistSemiBold } from "@/components/StyledText";
+const BgIconColors = [
+  { bg: '#DBECF6', icon: '#194A66' },
+  { bg: '#403100', icon: '#FEF5D3' },
+  { bg: '#4A3780', icon: '#E7E2F3' },
+];
+
+const initialTodos: Todo[] = [
+  {
+    id: 1,
+    title: 'Complete project presentation',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 2,
+    title: 'Buy groceries',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 3,
+    title: 'Call mom',
+    completed: false,
+    createdAt: new Date(),
+  },
+  {
+    id: 4,
+    title: 'Go for a run',
+    completed: true,
+    createdAt: new Date(),
+  },
+  {
+    id: 5,
+    title: 'Read 30 pages of book',
+    completed: false,
+    createdAt: new Date(),
+  },
+];
 
 export default function Home() {
-    const [todos, setTodos] = useState<Todo[]>([]);
-    const [searchTitle, setSearchTitle] = useState("");
+  const screenHeight = Dimensions.get('window').height;
+  const headerHeight = screenHeight * 0.25;
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [currentDate, setCurrentDate] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [currentTime, setCurrentTime] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>(
+    'all'
+  );
 
-    // Load todos when the screen is focused
-useFocusEffect(
-    useCallback(() => {
-        const fetchData = async () => {
-            try {
-                const data = await fetchTodos(); // fetchTodos should return Todo[] here
-                if (Array.isArray(data)) {
-                    setTodos(data); // Set the state with the fetched Todo array
-                } else {
-                    console.error("Fetched data is not an array:", data);
-                }
-            } catch (error) {
-                console.log("Error fetching todos:", error);
-            }
-        };
-
-        fetchData();
-    }, [])
-);
-
-
-    const handleAddTodo = async () => {
-        try {
-            const newTodo = await createTodo({
-                title: "New Todo",
-                completed: false,
-            });
-            setTodos((prevTodos) => [...prevTodos, newTodo]);
-        } catch (error) {
-            console.log("Error adding todo:", error);
-        }
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDate(
+        now.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        })
+      );
+      setCurrentTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+      );
     };
 
-    const handleDeleteTodo = async (id: number) => {
-        try {
-            await deleteTodo(id);
-            setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
-        } catch (error) {
-            console.log("Error deleting todo:", error);
-        }
-    };
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 60000);
 
-    const handleToggleCompleted = async (id: number) => {
-        try {
-            const todo = todos.find((t) => t.id === id);
-            if (!todo) return;
+    return () => clearInterval(interval);
+  }, []);
 
-            const updatedTodo = { ...todo, completed: !todo.completed };
-            await updateTodo(id, updatedTodo);
+  const toggleTodo = (id: number) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
 
-            setTodos((prevTodos) =>
-                prevTodos.map((t) => (t.id === id ? updatedTodo : t))
-            );
-        } catch (error) {
-            console.log("Error updating todo:", error);
-        }
-    };
+  const filteredTodos = () => {
+    switch (activeTab) {
+      case 'active':
+        return todos.filter((todo) => !todo.completed);
+      case 'completed':
+        return todos.filter((todo) => todo.completed);
+      default:
+        return todos;
+    }
+  };
 
-    const handleEditTodo = async (id: number, newTitle: string) => {
-        try {
-            const todo = todos.find((t) => t.id === id);
-            if (!todo) return;
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
 
-            const updatedTodo = { ...todo, title: newTitle };
-            await updateTodo(id, updatedTodo);
-
-            setTodos((prevTodos) =>
-                prevTodos.map((t) => (t.id === id ? updatedTodo : t))
-            );
-        } catch (error) {
-            console.log("Error editing todo:", error);
-        }
-    };
-
-    const getTodoByTitle = (title: string) => {
-        const foundTodo = todos.find(
-            (todo) => todo.title.toLowerCase() === title.toLowerCase()
-        );
-        if (foundTodo) {
-            Alert.alert(
-                "Todo Found",
-                `Title: ${foundTodo.title}\nCompleted: ${
-                    foundTodo.completed ? "Yes" : "No"
-                }`
-            );
-        } else {
-            Alert.alert("Not Found", `No todo found with title: "${title}"`);
-        }
-        return foundTodo;
-    };
+  const editTodo = (id: number, newTitle: string) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, title: newTitle } : todo
+    ));
+  };
 
     return (
         <View className="flex-1 bg-white pt-12">
@@ -136,24 +155,78 @@ useFocusEffect(
                 </TouchableOpacity>
             </View>
 
-            {/* Search by Title */}
-            <View className="flex-row gap-2 mt-4 px-4">
-                <TextInput
-                    placeholder="Enter title to search"
-                    placeholderTextColor="#999"
-                    onChangeText={setSearchTitle}
-                    value={searchTitle}
-                    className="bg-white border border-gray-300 px-3 py-2 flex-1 rounded-xl"
-                />
-                <TouchableOpacity
-                    className="bg-[#4A3780] px-4 justify-center rounded-xl"
-                    onPress={() => getTodoByTitle(searchTitle)}
-                >
-                    <UrbanistRegular className="text-white">
-                        Search
-                    </UrbanistRegular>
-                </TouchableOpacity>
-            </View>
+        <View className="w-full bg-white/20 rounded-full px-4 py-1 flex-row items-center">
+          <Feather name="search" size={24} color="white" />
+          <TextInput
+            placeholder="Search tasks..."
+            placeholderTextColor="rgba(255, 255, 255, 0.7)"
+            className="flex-1 ml-3 text-white"
+            style={{ fontFamily: 'Urbanist-Regular' }}
+          />
         </View>
-    );
+      </View>
+
+      <View style={styles.scrollContainer}>
+        <View className="flex flex-row justify-around mt-4 mb-2">
+          <TouchableOpacity
+            onPress={() => setActiveTab('all')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'all' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={activeTab === 'all' ? 'text-white' : 'text-gray-600'}
+            >
+              All
+            </UrbanistRegular>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('active')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'active' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={
+                activeTab === 'active' ? 'text-white' : 'text-gray-600'
+              }
+            >
+              Active
+            </UrbanistRegular>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('completed')}
+            className={`px-4 py-2 rounded-full ${
+              activeTab === 'completed' ? 'bg-[#4A3780]' : ''
+            }`}
+          >
+            <UrbanistRegular
+              className={
+                activeTab === 'completed' ? 'text-white' : 'text-gray-600'
+              }
+            >
+              Completed
+            </UrbanistRegular>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {filteredTodos().map((todo, index) => (
+        <TodoComponent
+          key={todo.id}
+          todo={todo}
+          onToggle={toggleTodo}
+          onDelete={deleteTodo}
+          onEdit={editTodo}
+          bgColor={BgIconColors[index % 3].bg}
+          iconColor={BgIconColors[index % 3].icon}
+        />
+      ))}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
+  );
 }
