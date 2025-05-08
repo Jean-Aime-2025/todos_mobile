@@ -1,253 +1,159 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  UrbanistBold,
-  UrbanistLight,
-  UrbanistRegular,
-  UrbanistSemiBold,
-} from '@/components/StyledText';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Feather from '@expo/vector-icons/Feather';
-import Entypo from '@expo/vector-icons/Entypo';
-import { router } from 'expo-router';
-import { useState, useEffect } from 'react';
-import TodoComponent from '@/components/common/TodoComponent';
+import { useCallback, useState } from "react";
+import { View, FlatList, Alert, TextInput } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
 
-const BgIconColors = [
-  { bg: '#DBECF6', icon: '#194A66' },
-  { bg: '#403100', icon: '#FEF5D3' },
-  { bg: '#4A3780', icon: '#E7E2F3' },
-];
-
-const initialTodos: Todo[] = [
-  {
-    id: 1,
-    title: 'Complete project presentation',
-    completed: false,
-    createdAt: new Date(),
-  },
-  {
-    id: 2,
-    title: 'Buy groceries',
-    completed: false,
-    createdAt: new Date(),
-  },
-  {
-    id: 3,
-    title: 'Call mom',
-    completed: false,
-    createdAt: new Date(),
-  },
-  {
-    id: 4,
-    title: 'Go for a run',
-    completed: true,
-    createdAt: new Date(),
-  },
-  {
-    id: 5,
-    title: 'Read 30 pages of book',
-    completed: false,
-    createdAt: new Date(),
-  },
-  // ... rest of your initial todos
-];
+import { fetchTodos, createTodo, deleteTodo, updateTodo } from "../../services/api";
+// import TodoItem from "../components/TodoItem";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { UrbanistRegular, UrbanistSemiBold } from "@/components/StyledText";
 
 export default function Home() {
-  const screenHeight = Dimensions.get('window').height;
-  const headerHeight = screenHeight * 0.25;
-  const [todos, setTodos] = useState<Todo[]>(initialTodos);
-  const [currentDate, setCurrentDate] = useState('');
-  const [currentTime, setCurrentTime] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>(
-    'all'
-  );
+    const [todos, setTodos] = useState<Todo[]>([]);
+    const [searchTitle, setSearchTitle] = useState("");
 
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      setCurrentDate(
-        now.toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-        })
-      );
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        })
-      );
+    // Load todos when the screen is focused
+useFocusEffect(
+    useCallback(() => {
+        const fetchData = async () => {
+            try {
+                const data = await fetchTodos(); // fetchTodos should return Todo[] here
+                if (Array.isArray(data)) {
+                    setTodos(data); // Set the state with the fetched Todo array
+                } else {
+                    console.error("Fetched data is not an array:", data);
+                }
+            } catch (error) {
+                console.log("Error fetching todos:", error);
+            }
+        };
+
+        fetchData();
+    }, [])
+);
+
+
+    const handleAddTodo = async () => {
+        try {
+            const newTodo = await createTodo({
+                title: "New Todo",
+                completed: false,
+            });
+            setTodos((prevTodos) => [...prevTodos, newTodo]);
+        } catch (error) {
+            console.log("Error adding todo:", error);
+        }
     };
 
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 60000);
+    const handleDeleteTodo = async (id: number) => {
+        try {
+            await deleteTodo(id);
+            setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+        } catch (error) {
+            console.log("Error deleting todo:", error);
+        }
+    };
 
-    return () => clearInterval(interval);
-  }, []);
+    const handleToggleCompleted = async (id: number) => {
+        try {
+            const todo = todos.find((t) => t.id === id);
+            if (!todo) return;
 
-  const toggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+            const updatedTodo = { ...todo, completed: !todo.completed };
+            await updateTodo(id, updatedTodo);
+
+            setTodos((prevTodos) =>
+                prevTodos.map((t) => (t.id === id ? updatedTodo : t))
+            );
+        } catch (error) {
+            console.log("Error updating todo:", error);
+        }
+    };
+
+    const handleEditTodo = async (id: number, newTitle: string) => {
+        try {
+            const todo = todos.find((t) => t.id === id);
+            if (!todo) return;
+
+            const updatedTodo = { ...todo, title: newTitle };
+            await updateTodo(id, updatedTodo);
+
+            setTodos((prevTodos) =>
+                prevTodos.map((t) => (t.id === id ? updatedTodo : t))
+            );
+        } catch (error) {
+            console.log("Error editing todo:", error);
+        }
+    };
+
+    const getTodoByTitle = (title: string) => {
+        const foundTodo = todos.find(
+            (todo) => todo.title.toLowerCase() === title.toLowerCase()
+        );
+        if (foundTodo) {
+            Alert.alert(
+                "Todo Found",
+                `Title: ${foundTodo.title}\nCompleted: ${
+                    foundTodo.completed ? "Yes" : "No"
+                }`
+            );
+        } else {
+            Alert.alert("Not Found", `No todo found with title: "${title}"`);
+        }
+        return foundTodo;
+    };
+
+    return (
+        <View className="flex-1 bg-white pt-12">
+            <View className="px-4 mb-3">
+                <UrbanistSemiBold className="text-xl text-black">
+                    Todo List
+                </UrbanistSemiBold>
+            </View>
+
+            <FlatList
+                data={todos}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                    <TodoItem
+                        todo={item}
+                        onDelete={handleDeleteTodo}
+                        onToggleCompleted={handleToggleCompleted}
+                        onEdit={handleEditTodo}
+                    />
+                )}
+                contentContainerStyle={{ paddingBottom: 100 }}
+            />
+
+            <View className="px-4 mt-4">
+                <TouchableOpacity
+                    className="bg-[#4A3780] p-3 rounded-xl items-center"
+                    onPress={handleAddTodo}
+                >
+                    <UrbanistSemiBold className="text-white">
+                        Add Todo
+                    </UrbanistSemiBold>
+                </TouchableOpacity>
+            </View>
+
+            {/* Search by Title */}
+            <View className="flex-row gap-2 mt-4 px-4">
+                <TextInput
+                    placeholder="Enter title to search"
+                    placeholderTextColor="#999"
+                    onChangeText={setSearchTitle}
+                    value={searchTitle}
+                    className="bg-white border border-gray-300 px-3 py-2 flex-1 rounded-xl"
+                />
+                <TouchableOpacity
+                    className="bg-[#4A3780] px-4 justify-center rounded-xl"
+                    onPress={() => getTodoByTitle(searchTitle)}
+                >
+                    <UrbanistRegular className="text-white">
+                        Search
+                    </UrbanistRegular>
+                </TouchableOpacity>
+            </View>
+        </View>
     );
-  };
-
-  const filteredTodos = () => {
-    switch (activeTab) {
-      case 'active':
-        return todos.filter((todo) => !todo.completed);
-      case 'completed':
-        return todos.filter((todo) => todo.completed);
-      default:
-        return todos;
-    }
-  };
-
-  const deleteTodo = (id: number) => {
-    setTodos(todos.filter(todo => todo.id !== id));
-  };
-
-  const editTodo = (id: number, newTitle: string) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, title: newTitle } : todo
-    ));
-  };
-
-  return (
-    <SafeAreaView className="flex-1 bg-[#4A3780]">
-      <View style={[styles.header, { height: headerHeight }]}>
-        <View className="w-full flex flex-row items-center justify-between">
-          <View className="flex flex-col">
-            <UrbanistBold className="text-xl text-white">
-              {currentDate || 'Today'}
-            </UrbanistBold>
-            <UrbanistLight className="text-sm text-white">
-              {filteredTodos().length} tasks
-            </UrbanistLight>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/add')}
-            className="bg-white p-4 py-3 rounded-xl flex flex-row gap-1 items-center"
-          >
-            <Entypo name="plus" size={20} color="#4A3780" />
-            <UrbanistRegular className="text-primary text-sm">
-              Add Task
-            </UrbanistRegular>
-          </TouchableOpacity>
-        </View>
-
-        <View className="w-full bg-white/20 rounded-full px-4 py-1 flex-row items-center">
-          <Feather name="search" size={24} color="white" />
-          <TextInput
-            placeholder="Search tasks..."
-            placeholderTextColor="rgba(255, 255, 255, 0.7)"
-            className="flex-1 ml-3 text-white"
-            style={{ fontFamily: 'Urbanist-Regular' }}
-          />
-        </View>
-      </View>
-
-      <View style={styles.scrollContainer}>
-        {/* Tabs */}
-        <View className="flex flex-row justify-around mt-4 mb-2">
-          <TouchableOpacity
-            onPress={() => setActiveTab('all')}
-            className={`px-4 py-2 rounded-full ${
-              activeTab === 'all' ? 'bg-[#4A3780]' : ''
-            }`}
-          >
-            <UrbanistRegular
-              className={activeTab === 'all' ? 'text-white' : 'text-gray-600'}
-            >
-              All
-            </UrbanistRegular>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-full ${
-              activeTab === 'active' ? 'bg-[#4A3780]' : ''
-            }`}
-          >
-            <UrbanistRegular
-              className={
-                activeTab === 'active' ? 'text-white' : 'text-gray-600'
-              }
-            >
-              Active
-            </UrbanistRegular>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab('completed')}
-            className={`px-4 py-2 rounded-full ${
-              activeTab === 'completed' ? 'bg-[#4A3780]' : ''
-            }`}
-          >
-            <UrbanistRegular
-              className={
-                activeTab === 'completed' ? 'text-white' : 'text-gray-600'
-              }
-            >
-              Completed
-            </UrbanistRegular>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {filteredTodos().map((todo, index) => (
-        <TodoComponent
-          key={todo.id}
-          todo={todo}
-          onToggle={toggleTodo}
-          onDelete={deleteTodo}
-          onEdit={editTodo}
-          bgColor={BgIconColors[index % 3].bg}
-          iconColor={BgIconColors[index % 3].icon}
-        />
-      ))}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
-  );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: '#4A3780',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexDirection: 'column',
-    gap: 16,
-    padding: 16,
-    paddingVertical: 20,
-  },
-  scrollContainer: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-    borderTopLeftRadius: 40,
-    overflow: 'hidden',
-  },
-  scrollView: {
-    flex: 1,
-    paddingVertical:12
-  },
-  scrollContent: {
-    padding: 13,
-    paddingTop: 0,
-    paddingBottom: 40,
-    flexGrow: 1,
-  },
-});
