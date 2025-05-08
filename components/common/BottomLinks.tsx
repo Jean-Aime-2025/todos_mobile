@@ -1,33 +1,41 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import React from 'react';
 import { UrbanistMedium } from '../StyledText';
-import { Link } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 
 const BottomLinks = ({ type }: { type: string }) => {
-    return (
-      <View style={styles.bottomTextContainer}>
-        {type === 'register' ? (
-          <View style={styles.linkContainer}>
-            <UrbanistMedium style={styles.bottomText}>Have an account?</UrbanistMedium>
-            <Link href={'/(auth)/login'} asChild>
-                <UrbanistMedium style={styles.linkText}>Login</UrbanistMedium>
-              
-            </Link>
-          </View>
-        ) : (
-          <View style={styles.linkContainer}>
-            <UrbanistMedium style={styles.bottomText}>Dont have an account? </UrbanistMedium>
-            <Link href={'/(auth)/register'} asChild>
-                <UrbanistMedium style={styles.linkText}>Register</UrbanistMedium>
-              
-            </Link>
-          </View>
-        )}
-      </View>
-    );
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const goTo = (path: string) => {
+    if (pathname !== path) {
+      router.push(path);
+    }
   };
 
+  return (
+    <View style={styles.bottomTextContainer}>
+      {type === 'register' ? (
+        <View style={styles.linkContainer}>
+          <UrbanistMedium style={styles.bottomText}>Have an account? </UrbanistMedium>
+          <Pressable onPress={() => goTo('/(auth)/login')}>
+            <UrbanistMedium style={styles.linkText}>Login</UrbanistMedium>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.linkContainer}>
+          <UrbanistMedium style={styles.bottomText}>Dont have an account? </UrbanistMedium>
+          <Pressable onPress={() => goTo('/(auth)/register')}>
+            <UrbanistMedium style={styles.linkText}>Register</UrbanistMedium>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default BottomLinks;
+
 
 const styles = StyleSheet.create({
   bottomTextContainer: {
