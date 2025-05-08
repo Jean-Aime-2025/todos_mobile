@@ -61,9 +61,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 20,
     flexDirection: 'column',
-    justifyContent: 'space-between', // This will push content to top and button to bottom
+    justifyContent: 'space-between', 
   },
   content: {
-    flex: 1, // This will take all available space pushing the button down
+    flex: 1,
   },
 });
