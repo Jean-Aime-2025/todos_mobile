@@ -7,7 +7,9 @@ const BottomLinks = ({ type }: { type: string }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const goTo = (path: string) => {
+  type ValidPaths = '/(auth)/login' | '/(auth)/register';
+
+  const goTo = (path: ValidPaths) => {
     if (pathname !== path) {
       router.push(path);
     }
@@ -17,14 +19,18 @@ const BottomLinks = ({ type }: { type: string }) => {
     <View style={styles.bottomTextContainer}>
       {type === 'register' ? (
         <View style={styles.linkContainer}>
-          <UrbanistMedium style={styles.bottomText}>Have an account? </UrbanistMedium>
+          <UrbanistMedium style={styles.bottomText}>
+            Have an account?{' '}
+          </UrbanistMedium>
           <Pressable onPress={() => goTo('/(auth)/login')}>
             <UrbanistMedium style={styles.linkText}>Login</UrbanistMedium>
           </Pressable>
         </View>
       ) : (
         <View style={styles.linkContainer}>
-          <UrbanistMedium style={styles.bottomText}>Dont have an account? </UrbanistMedium>
+          <UrbanistMedium style={styles.bottomText}>
+            Dont have an account?{' '}
+          </UrbanistMedium>
           <Pressable onPress={() => goTo('/(auth)/register')}>
             <UrbanistMedium style={styles.linkText}>Register</UrbanistMedium>
           </Pressable>
@@ -35,7 +41,6 @@ const BottomLinks = ({ type }: { type: string }) => {
 };
 
 export default BottomLinks;
-
 
 const styles = StyleSheet.create({
   bottomTextContainer: {

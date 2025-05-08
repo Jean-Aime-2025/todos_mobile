@@ -34,7 +34,17 @@ export default function Todos() {
             <UrbanistBold>Todo Title</UrbanistBold>
             <TextInput
               placeholder="Enter todo title"
-              className="border px-4 py-3 rounded-full bg-white border-gray-300"
+              placeholderTextColor="#94A3B8"
+              style={{
+                borderWidth: 1,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                borderRadius: 9999,
+                backgroundColor: 'white',
+                borderColor: '#D1D5DB',
+                fontFamily: 'Urbanist-Medium',
+                fontSize: 16,
+              }}
             />
           </View>
         </View>
