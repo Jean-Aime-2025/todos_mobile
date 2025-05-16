@@ -1,6 +1,10 @@
-// useTodos.ts
 import { useEffect, useState } from "react";
-import { fetchTodos, createTodo, deleteTodo, updateTodo } from '../services/api';
+import {
+    fetchTodos,
+    createTodo,
+    deleteTodo,
+    updateTodo,
+} from "../services/api";
 
 export function useTodos() {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -9,38 +13,65 @@ export function useTodos() {
 
     useEffect(() => {
         loadTodos();
-    }, []);
+    }, [todos]);
 
-    const loadTodos = async () => {
+    const loadTodos = async (): Promise<Todo[]> => {
         setLoading(true);
         try {
             const data = await fetchTodos();
-            setTodos(data);
+            const sorted = [...data].sort((a, b) => b.id - a.id);
+            setTodos(sorted);
+            return sorted;
         } catch (err) {
             setError("Failed to fetch todos");
+            return []; // <-- Always return a fallback array
         } finally {
             setLoading(false);
         }
     };
 
-    const addTodo = async (todo: Omit<Todo, "id">) => {
-        const newTodo = await createTodo(todo);
-        setTodos((prev) => [newTodo, ...prev]);
+
+    const addTodo = async (newTodo: Todo) => {
+        try {
+            // Assuming you have a backend API service to save a new todo
+            const response = await createTodo(newTodo); // <-- Ensure `createTodo` is correct
+            setTodos((prevTodos) => [...prevTodos, response]); // Update local state
+        } catch (err) {
+            throw new Error("Error adding todo");
+        }
     };
 
+
+
+
     const removeTodo = async (id: number) => {
-        await deleteTodo(id);
-        setTodos((prev) => prev.filter((todo) => todo.id !== id));
+        try {
+            await deleteTodo(id);
+            setTodos((prev) => prev.filter((todo) => todo.id !== id));
+        } catch (err) {
+            console.error("Failed to delete todo", err);
+        }
     };
 
     const editTodo = async (id: number, updates: Partial<Todo>) => {
-        const updated = await updateTodo(id, updates);
-        setTodos((prev) =>
-            prev.map((todo) =>
-                todo.id === id ? { ...todo, ...updated } : todo
-            )
-        );
+        try {
+            const updated = await updateTodo(id, updates);
+            setTodos((prev) =>
+                prev.map((todo) =>
+                    todo.id === id ? { ...todo, ...updated } : todo
+                )
+            );
+        } catch (err) {
+            console.error("Failed to update todo", err);
+        }
     };
+
+     const toggleTodo = async (id: number) => {
+         const todo = todos.find((t) => t.id === id);
+         if (!todo) return;
+         await editTodo(id, { completed: !todo.completed });
+     };
+
 
     return {
         todos,
@@ -49,6 +80,7 @@ export function useTodos() {
         addTodo,
         removeTodo,
         editTodo,
-        reload: loadTodos,
+        toggleTodo,
+        loadTodos,
     };
 }
