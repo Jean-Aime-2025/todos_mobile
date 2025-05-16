@@ -17,7 +17,10 @@ export default function Todos() {
     const screenHeight = Dimensions.get("window").height;
     const headerHeight = screenHeight * 0.15;
 
-    const { addTodo } = useTodos(); // <-- Extract addTodo from the hook
+    const { addTodo, todos } = useTodos(); // <-- Extract addTodo from the hook
+    const lastTodo = todos[todos.length - 1]; // Get the last todo
+    const newId = lastTodo ? lastTodo.id + 1 : 1; // Increment last id or set to 1 if no todos exist
+
     const [title, setTitle] = useState("");
 
     const handleSave = async () => {
@@ -27,11 +30,14 @@ export default function Todos() {
         }
 
         try {
-            await addTodo({ title, completed: false }); // Use hook to add todo
+            console.log("Adding Todo:", { title, completed: false }); // Debugging
+            await addTodo({id:newId, title, completed: false });
             Alert.alert("Success", "Todo added successfully");
+
             setTitle("");
-            router.back(); // Go back after saving
+            router.back();
         } catch (err) {
+            console.log("Error:", err); // Debugging
             Alert.alert("Error", "Failed to save todo");
         }
     };
